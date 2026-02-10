@@ -11,40 +11,33 @@ BOT_KEYWORDS = [
     "monitor", "uptime", "checker"
 ]
 
-REQUIRED_HEADERS = [
-    "Accept",
-    "Accept-Language",
-    "User-Agent",
-    "Sec-Fetch-Site",
-    "Sec-Fetch-Mode",
-    "Sec-Fetch-Dest"
-]
-
 def is_bot(req):
-    headers = req.headers
-    ua = (headers.get("User-Agent") or "").lower()
+    h = req.headers
+    ua = (h.get("User-Agent") or "").lower()
 
-    # 1. Missing required browser headers
-    for h in REQUIRED_HEADERS:
-        if not headers.get(h):
-            return True
+    # 1️⃣ Hard fail: no UA
+    if not ua:
+        return True
 
-    # 2. Obvious bot keywords
+    # 2️⃣ Known bot / AI keywords
     for word in BOT_KEYWORDS:
         if word in ua:
             return True
 
-    # 3. Headless / automation hints
-    if "headless" in ua:
+    # 3️⃣ Must look like a real browser
+    if not (
+        h.get("Accept") and
+        h.get("Accept-Language") and
+        h.get("Upgrade-Insecure-Requests")
+    ):
         return True
 
-    # 4. Programmatic Accept headers
-    accept = headers.get("Accept", "")
-    if accept in ["*/*", "application/json"]:
+    # 4️⃣ Reject obvious non-browser Accepts
+    if h.get("Accept") in ["*/*", "application/json"]:
         return True
 
-    # 5. Suspicious fetch behavior
-    if headers.get("Sec-Fetch-Site") == "none":
+    # 5️⃣ Browser engine sanity check
+    if not any(x in ua for x in ["chrome", "safari", "firefox", "edg"]):
         return True
 
     return False
@@ -53,10 +46,8 @@ def is_bot(req):
 @app.route("/")
 def root():
     if is_bot(request):
-        # BOT DESTINATION
         return redirect("https://azure.com", code=302)
     else:
-        # HUMAN DESTINATION
         return redirect("https://www.google.com", code=302)
 
 
